@@ -28,6 +28,7 @@ body, input, button {
 }
 
 button {
+  margin: 3px;
   color: white;
   border: none;
   padding: 8px;

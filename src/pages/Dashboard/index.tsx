@@ -8,25 +8,24 @@ import styled from 'styled-components';
 
 
 interface IEventoRequest {
-  nomeevento: string;
-  local: string;
-  diasemana: string;
-  horario: string;
+  nome: string;
+  tipoexame: string;
+  nomeexame: string;
+  mesanoexame: string;
+  laboratorio: string;
 }
 
 interface IEventoResponse extends IEventoRequest {
   id: string;
-  like: number;
-  dislike: number;
 }
 
 const Dashboard: React.FC = () => {
-  const [nomeevento, setNomeEvento] = useState('');
-  const [local, setLocal] = useState('');
-  const [diasemana, setDiaSemana] = useState('');
-  const [horario, setHorario] = useState('');
-  const [like, setLike] = useState(0);
-  const [dislike, setDislike] = useState(0);
+  const [nome, setNomeEvento] = useState('');
+  const [tipoexame, setLocal] = useState('');
+  const [nomeexame, setDiaSemana] = useState('');
+  const [mesanoexame, setHorario] = useState('');
+  const [laboratorio, setLike] = useState('');
+  
 
   const [eventos, setEventos] = useState<IEventoResponse[]>([]);
 
@@ -35,7 +34,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     axios({
       method: 'get',
-      url: `${urlAPI}/events`
+      url: `${urlAPI}/exames`
     }).then((response: AxiosResponse<IEventoResponse[]>) => {
       setEventos(response.data);
     }).catch((error: AxiosError) => {
@@ -47,15 +46,16 @@ const Dashboard: React.FC = () => {
     event.preventDefault();
 
     const novoEvento: IEventoRequest = {
-      nomeevento,
-      local,
-      diasemana,
-      horario
+      nome,
+      tipoexame,
+      nomeexame,
+      mesanoexame,
+      laboratorio,
     }
 
     axios({
       method: 'post',
-      url: `${urlAPI}/events`,
+      url: `${urlAPI}/exames`,
       data: novoEvento
     }).then((response: AxiosResponse<IEventoResponse>) => {
       setEventos([...eventos, response.data]);
@@ -67,7 +67,7 @@ const Dashboard: React.FC = () => {
   function remover(id: string): void {
     axios({
       method: 'delete',
-      url: `${urlAPI}/events/${id}`
+      url: `${urlAPI}/exames/${id}`
     }).then(() => {
       setEventos(eventos.filter(e => e.id !== id));
     }).catch((error: AxiosError) => {
@@ -75,53 +75,44 @@ const Dashboard: React.FC = () => {
     });
   }
 
-  function curtir(id: string): void {
-    axios({
-      method: 'post',
-      url: `${urlAPI}/events/like/${id}`
-    }).then((response: AxiosResponse<IEventoResponse>) => {
-      eventos.map(e => {
-        if (e.id === id) {
-          setLike(e.like += 1);
-          window.location.reload();
-
-        }
-      });
-    }).catch((error: AxiosError) => {
-      console.log(error);
-    });
-  }
-
-  function descurtir(id: string): void {
-    axios({
-      method: 'post',
-      url: `${urlAPI}/events/dislike/${id}`
-    }).then((response: AxiosResponse<IEventoResponse>) => {
-      eventos.map(e => {
-        if (e.id === id) {
-          setDislike(e.dislike += 1);
-          window.location.reload();
-        }
-      });
-    }).catch((error: AxiosError) => {
-      console.log(error);
-    });
-  }
+  
 
   return (
     <>
       <form onSubmit={cadastrar}>
-        <label>Nome do Evento: </label>
-        <input type='text' placeholder='Nome do Evento' value={nomeevento} onChange={(e: any) => { setNomeEvento(e.target.value); }} /><br></br>
-        <label>Local do Evento: </label>
-        <input type='text' placeholder='Local do Evento' value={local} onChange={(e: any) => { setLocal(e.target.value); }} /><br></br>
-        <label>Dia da semana: </label> 
-        <input type='text' placeholder='Dia da Semana' value={diasemana} onChange={(e: any) => { setDiaSemana(e.target.value); }} /><br></br>
-        <label>Horário: </label>
+        <label>Nome: </label>
+        <input type='text' placeholder='Nome' required value={nome} onChange={(e: any) => { setNomeEvento(e.target.value); }} /><br></br>
+        <label>Tipo de Exame: </label>
+        <input type='text' list="tipodeexame" required placeholder='Tipo de Exame' value={tipoexame} onChange={(e: any) => { setLocal(e.target.value); }} />
+        <br></br>
+        <datalist id="tipodeexame">
+          <option value="Admissional"></option>
+          <option value="Periódico"></option>
+          <option value="Demissional"></option>
+        </datalist>
+        
+        <label>Nome do Exame: </label> 
+        <input type='text' list="nomedoexame" required placeholder='Nome do Exame' value={nomeexame} onChange={(e: any) => { setDiaSemana(e.target.value); }} />
+        <datalist id="nomedoexame">
+          <option value="Hemograma Completo"></option>
+          <option value="Audiometria"></option>
+          <option value="Acuidade Visual"></option>
+        </datalist>
+        <br></br>
+        <label>Data: </label>
 
-        <input type='text' placeholder="Horário" value={horario} onChange={(e: any) => { setHorario(e.target.value); }} /><br></br>
+        <input type='month' required placeholder="Data" value={mesanoexame} onChange={(e: any) => { setHorario(e.target.value); }} /><br></br>
+        <label>Laboratório: </label>
 
+        <input type='text' list="lab" required placeholder="Laboratório" value={laboratorio} onChange={(e: any) => { setLike(e.target.value); }} />
+        <datalist id="lab">
+          <option value="Lab Funcional"></option>
+          <option value="Lab Medicina"></option>
+        </datalist><br></br>
         <button type="submit">Salvar</button>
+        <button><Link to={`/totais`}>Totais</Link></button>
+       
+        
 
        
       </form>
@@ -132,11 +123,11 @@ const Dashboard: React.FC = () => {
         <thead>
           <tr>
             <td>Nome</td>
-            <td>Local</td>
-            <td>Dia da semana</td>
-            <td>Horário</td>
-            <td>Likes</td>
-            <td>Dislikes</td>
+            <td>Tipo de Exame</td>
+            <td>Nome do Exame</td>
+            <td>Data</td>
+            <td>Laboratório</td>
+            
           </tr>
         </thead>
 
@@ -145,28 +136,19 @@ const Dashboard: React.FC = () => {
             eventos.map(e => {
               return (
                 <tr key={e.id}>
-                  <td>{e.nomeevento}</td>
-                  <td>{e.local}</td>
-                  <td>{e.diasemana}</td>
-                  <td>{e.horario}</td>
-                  <td>{e.like}</td>
-                  <td>{e.dislike}</td>
+                  <td>{e.nome}</td>
+                  <td>{e.tipoexame}</td>
+                  <td>{e.nomeexame}</td>
+                  <td>{e.mesanoexame}</td>
+                  <td>{e.laboratorio}</td>
+                  
                 
                   <td>
                     <button type='button' onClick={() => { remover(e.id); }}>
                       Remover
                     </button>
                   </td>
-                  <td>
-                    <button type='button' onClick={() => { curtir(e.id) }}>
-                      Like
-                    </button>
-                  </td>
-                  <td>
-                    <button type='button' onClick={() => { descurtir(e.id) }}>
-                      Dislike
-                    </button>
-                  </td>
+                
                 </tr>
               );
             })
